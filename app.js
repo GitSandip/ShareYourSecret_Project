@@ -6,6 +6,7 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 mongoose.set({'strictQuery':false})
 const encrypt= require("mongoose-encryption");
+const md5=require("md5");
 // const session = require('express-session');
 // const passport = require("passport");
 // const passportLocalMongoose = require("passport-local-mongoose");
@@ -29,14 +30,12 @@ const DBSchema=new mongoose.Schema({
 
 // const secret="sandipzalteatpost";
 
-DBSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["password"]});
+// DBSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["password"]});
 const User=mongoose.model("User",DBSchema);
 
 // {
 //   Above sequece is should be need to follow
 // }
-
-console.log(process.env.SECRET);
 
 app.get("/",function(req,res){
   res.render("home");
@@ -74,7 +73,7 @@ app.get("/submit",function(req,res){
 app.post("/register",function(req,res){
   const newUser =new User({
     email:req.body.username,
-    password:req.body.password
+    password:md5(req.body.password)
   })
   newUser.save(function(err){
     if(!err){
