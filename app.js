@@ -6,7 +6,9 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 mongoose.set({'strictQuery':false})
 const encrypt= require("mongoose-encryption");
-const md5=require("md5");
+// const md5=require("md5");
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 // const session = require('express-session');
 // const passport = require("passport");
 // const passportLocalMongoose = require("passport-local-mongoose");
@@ -50,19 +52,19 @@ app.post("/login",function(req,res){
   let pass=req.body.password;
 
   User.findOne({email:email},function(err,foundItem){
+
     if(!err){
       if(foundItem){
-        if(pass===foundItem.password){
-          res.render("secrets");
-        }else{
-          console.log("wrong password");
-        }
-      }else{
-        console.log("user not exist");
+        bcrypt.compare(pass,foundItem.password, function(err, result) {
+          if(result===true){
+            res.render("secrets");
+          }
+        });
       }
     }
-  })
-})
+     
+  });
+});
 app.get("/register",function(req,res){
   res.render("register");
 })
@@ -71,17 +73,21 @@ app.get("/submit",function(req,res){
 })
 
 app.post("/register",function(req,res){
-  const newUser =new User({
-    email:req.body.username,
-    password:md5(req.body.password)
-  })
-  newUser.save(function(err){
-    if(!err){
-      res.render("secrets");
-    }else{
-      console.log(err);
-    }
-  });
+  
+  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+    const newUser =new User({
+      email:req.body.username,
+      password:hash
+    });
+    newUser.save(function(err){
+      if(!err){
+        res.render("secrets");
+      }else{
+        console.log(err);
+      }
+    });
+});
+  
 
 });
 
